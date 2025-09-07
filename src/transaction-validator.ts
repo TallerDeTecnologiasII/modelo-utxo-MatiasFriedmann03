@@ -28,34 +28,34 @@ export class TransactionValidator {
     }
 
     for (const input of transaction.inputs) {
-      const tx = this.utxoPool.getUTXO(input.utxoId.txId, input.utxoId.outputIndex);
+      const utxo = this.utxoPool.getUTXO(input.utxoId.txId, input.utxoId.outputIndex);
       
       // Verificar que el UTXO existe
-      if (!tx) {
+      if (!utxo) {
         errors.push(createValidationError(VALIDATION_ERRORS.UTXO_NOT_FOUND, `Input UTXO ${input.utxoId.txId} not found`));
         continue;
       }
 
-      const txKey = `${input.utxoId.txId}:${input.owner}:${input.utxoId.outputIndex}`;
+      const utxoKey = `${input.utxoId.txId}:${input.owner}:${input.utxoId.outputIndex}`;
       
       // Validar que no hay doble gasto 
-      if (usedUTXOs.has(txKey)) {
+      if (usedUTXOs.has(utxoKey)) {
         errors.push(createValidationError(VALIDATION_ERRORS.DOUBLE_SPENDING, `Double spending detected for UTXO ${input.utxoId.txId}`)); 
         continue;
       }
       
       // Verificar que el monto es un numero positivo
-      if (tx.amount <= 0) {
+      if (utxo.amount <= 0) {
         errors.push(createValidationError(VALIDATION_ERRORS.NEGATIVE_AMOUNT, `Negative or 0 amount in UTXO ${input.utxoId.txId}`));
         continue;
       }
-      usedUTXOs.add(txKey);
-      inputSum += tx.amount;
+      usedUTXOs.add(utxoKey);
+      inputSum += utxo.amount;
 
-      const txData = this.createTransactionDataForSigning_(transaction);
+      const utxoData = this.createTransactionDataForSigning_(transaction);
       
       // Verificar la firma del input
-      if (!verify(txData, input.signature, input.owner)) {
+      if (!verify(utxoData, input.signature, input.owner)) {
         errors.push(createValidationError(VALIDATION_ERRORS.INVALID_SIGNATURE, `Invalid signature for input UTXO ${input.utxoId.txId}`));
       }
     }
